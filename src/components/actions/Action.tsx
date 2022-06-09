@@ -16,8 +16,7 @@ interface IAction {
 
 interface IValues {
     valueAtual: number;
-    valuePurchase: number;
-    valueSale: number;
+    amount: number;
     quantityAction: number;
 }
 
@@ -69,8 +68,10 @@ export function Action() {
             }
         })
 
+        const amount = valuePurchase - valueSale;
+
         const valueAtual = quantityAction * valuePREULT;
-        setValue({valueAtual, valuePurchase, valueSale, quantityAction});
+        setValue({valueAtual, amount, quantityAction});
     }
 
     function viewAlterAction(actionId: string) {
@@ -118,6 +119,45 @@ export function Action() {
         })
     }
 
+    function viewCreate() {
+        const createWallet = document.getElementById('createWallet')
+        const buttonView = document.getElementById('buttonView')
+        
+        if (createWallet.className !== 'create' ) {
+            createWallet.className = 'create' 
+            buttonView.className = 'displayInvisible'
+        } else {
+            createWallet.className = 'displayInvisible'
+            buttonView.className = 'buttonCreate';
+        }
+    }
+
+    function createAction() {
+        const name = document.getElementById('name')?.value;
+        const initials = document.getElementById('initials')?.value;
+        const quantity = document.getElementById('quantity')?.value;
+        const value = document.getElementById('value')?.value;
+        const purchase = document.getElementById('purchase')?.value;
+
+        api.post('/actions', {
+            wallet_id,
+            name,
+            initials,
+            value,
+            purchase: purchase === 'true' ? true : false, 
+            quantity, 
+        }, {
+            headers: {
+                'authorization': `token ${token}`
+            }
+        }).then(data => {
+            loadAction()
+        })
+
+        viewCreate()
+    }
+
+
     useEffect(() => {
         loadAction();
         currentValues()
@@ -132,9 +172,23 @@ export function Action() {
             <Navegation />
             <h1>{initials}</h1>
             <span>Saldo atual: R$ {value?.valueAtual ?  value?.valueAtual.toFixed(2) : 'Valor não encontrado'}</span>
-            <span>Valor total de compras: R$ {value?.valuePurchase.toFixed(2)}</span>
-            <span>Valor total de vendas: R$ {value?.valueSale.toFixed(2)}</span>
+            <span>Valor total de compras: R$ {value?.amount.toFixed(2)}</span>
             <span>Quantidade atual: {value?.quantityAction}</span>
+
+            <div id="createWallet" className="displayInvisible">
+                <h2>Novo movimento</h2>
+                <input type="text" id="name" placeholder="Nome"/>
+                <input type="text" id="initials" placeholder="Sigla"/>
+                <input type="number" id="quantity" placeholder="Quantidade"/>
+                <input type="number" id="value" placeholder="Valor"/>
+                <select name="purchase" id="purchase">
+                    <option value="true">Compra</option>
+                    <option value="false">Venda</option>
+                </select>
+                <button onClick={createAction} className="buttonCreate">Criar</button>
+                <button onClick={viewCreate} className="buttonDelete">Cancelar</button>
+            </div>
+            <button id="buttonView" onClick={viewCreate} className="buttonCreate">ADICIONAR</button>
             <ul className="actions">
                 <h2>Histórico</h2>
                 {actions.map(action => 
